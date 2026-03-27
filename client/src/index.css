@@ -476,6 +476,31 @@ textarea.form-control { min-height: 80px; resize: vertical; }
 .warranty-days.urgent { color: var(--danger); }
 .warranty-days.warning { color: var(--warning); }
 
+/* Mobile header (hamburger bar) */
+.mobile-header {
+  display: none;
+  position: fixed;
+  top: 0; left: 0; right: 0;
+  height: 56px;
+  background: var(--gray-900);
+  color: white;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 16px;
+  z-index: 98;
+}
+
+.mobile-title { font-size: 16px; font-weight: 700; color: white; }
+.mobile-menu-btn { color: white !important; }
+
+/* Sidebar overlay (mobile) */
+.sidebar-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.5);
+  z-index: 99;
+}
+
 /* Responsive */
 @media (max-width: 1024px) {
   .dashboard-grid { grid-template-columns: 1fr; }
@@ -483,7 +508,60 @@ textarea.form-control { min-height: 80px; resize: vertical; }
 }
 
 @media (max-width: 768px) {
-  .sidebar { display: none; }
-  .main-content { margin-left: 0; }
+  /* Show mobile header */
+  .mobile-header { display: flex; }
+
+  /* Sidebar becomes a slide-in drawer */
+  .sidebar {
+    transform: translateX(-100%);
+    transition: transform 0.25s ease;
+    z-index: 100;
+  }
+  .sidebar.open { transform: translateX(0); }
+
+  /* Main content full width, offset for mobile header */
+  .main-content {
+    margin-left: 0;
+    padding: 16px;
+    padding-top: 72px;
+  }
+
+  /* Stats */
   .stats-grid { grid-template-columns: 1fr 1fr; }
+  .stat-value { font-size: 22px; }
+  .stat-card { padding: 14px; gap: 12px; }
+
+  /* Page header */
+  .page-header { margin-bottom: 16px; }
+  .page-header h2 { font-size: 20px; }
+
+  /* Filters: stack vertically */
+  .filters-bar { flex-direction: column; align-items: stretch; }
+  .filters-bar .form-control { width: 100%; min-width: unset; }
+  .search-input { min-width: unset !important; }
+
+  /* Table: tighter padding */
+  th, td { padding: 8px 10px; font-size: 13px; }
+
+  /* Login card: full width */
+  .login-card { width: 100%; max-width: 400px; padding: 28px 20px; }
+
+  /* Modal: full screen on mobile */
+  .modal-overlay { padding: 0; align-items: flex-end; }
+  .modal {
+    max-height: 92vh;
+    border-radius: var(--radius) var(--radius) 0 0;
+  }
+
+  /* Warranty items: stack */
+  .warranty-item { flex-direction: column; align-items: flex-start; gap: 4px; }
+
+  /* Pagination: stack */
+  .pagination { flex-direction: column; gap: 8px; align-items: flex-start; }
+
+  /* Dashboard grid: single column */
+  .dashboard-grid { grid-template-columns: 1fr; margin-top: 16px; gap: 16px; }
+
+  /* Chart bar label shorter */
+  .chart-bar-label { width: 90px; font-size: 12px; }
 }

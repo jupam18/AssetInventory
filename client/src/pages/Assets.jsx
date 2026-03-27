@@ -7,7 +7,7 @@ import { statusBadge, formatDate, ASSET_STATUSES } from '../utils/helpers';
 import { Plus, Edit2, Trash2, Eye, ChevronLeft, ChevronRight } from 'lucide-react';
 
 const emptyAsset = {
-  serial_number: '', asset_type: '', make: '', model: '',
+  device_name: '', serial_number: '', asset_type: '', make: '', model: '',
   location: '', client: '', assigned_to: '', status: 'Available',
   warranty_date: '', commentary: '',
 };
@@ -159,7 +159,7 @@ export default function Assets() {
       <div className="filters-bar">
         <input
           className="form-control search-input"
-          placeholder="Search serial, make, model, assigned to..."
+          placeholder="Search device name, serial, make, model, assigned to..."
           value={filters.search}
           onChange={e => { setFilters(f => ({ ...f, search: e.target.value })); setPage(1); }}
         />
@@ -186,6 +186,7 @@ export default function Assets() {
           <table>
             <thead>
               <tr>
+                <th onClick={() => handleSort('device_name')}>Device Name{sortIndicator('device_name')}</th>
                 <th onClick={() => handleSort('serial_number')}>Serial Number{sortIndicator('serial_number')}</th>
                 <th onClick={() => handleSort('asset_type')}>Type{sortIndicator('asset_type')}</th>
                 <th onClick={() => handleSort('make')}>Make{sortIndicator('make')}</th>
@@ -200,12 +201,13 @@ export default function Assets() {
             </thead>
             <tbody>
               {loading ? (
-                <tr><td colSpan={10} className="text-center text-muted">Loading...</td></tr>
+                <tr><td colSpan={11} className="text-center text-muted">Loading...</td></tr>
               ) : assets.length === 0 ? (
-                <tr><td colSpan={10} className="text-center text-muted">No assets found</td></tr>
+                <tr><td colSpan={11} className="text-center text-muted">No assets found</td></tr>
               ) : assets.map(a => (
                 <tr key={a.id}>
-                  <td><strong>{a.serial_number}</strong></td>
+                  <td><strong>{a.device_name || '—'}</strong></td>
+                  <td>{a.serial_number}</td>
                   <td>{a.asset_type}</td>
                   <td>{a.make || '—'}</td>
                   <td>{a.model || '—'}</td>
@@ -260,9 +262,15 @@ export default function Assets() {
           {error && <div className="alert alert-danger">{error}</div>}
           <div className="form-row">
             <div className="form-group">
+              <label>Device Name</label>
+              <input className="form-control" value={form.device_name || ''} onChange={e => setForm(f => ({ ...f, device_name: e.target.value }))} placeholder="e.g. John's Laptop" />
+            </div>
+            <div className="form-group">
               <label>Serial Number *</label>
               <input className="form-control" value={form.serial_number} onChange={e => setForm(f => ({ ...f, serial_number: e.target.value }))} disabled={editMode} required />
             </div>
+          </div>
+          <div className="form-row">
             <div className="form-group">
               <label>Hardware Type *</label>
               <select className="form-control" value={form.asset_type} onChange={e => setForm(f => ({ ...f, asset_type: e.target.value }))}>
@@ -353,6 +361,10 @@ function AssetDetail({ asset }) {
 
   return (
     <div>
+      <div className="form-row">
+        <div className="form-group"><label>Device Name</label><p><strong>{asset.device_name || '—'}</strong></p></div>
+        <div className="form-group"><label>Serial Number</label><p>{asset.serial_number}</p></div>
+      </div>
       <div className="form-row">
         <div className="form-group"><label>Type</label><p>{asset.asset_type}</p></div>
         <div className="form-group"><label>Status</label><p><span className={`badge ${statusBadge(asset.status)}`}>{asset.status}</span></p></div>

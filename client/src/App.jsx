@@ -1,6 +1,8 @@
+import { useState } from 'react';
 import { Routes, Route, Navigate } from 'react-router-dom';
 import { useAuth } from './context/AuthContext';
 import Sidebar from './components/Sidebar';
+import { Menu } from 'lucide-react';
 import Login from './pages/Login';
 import Dashboard from './pages/Dashboard';
 import Assets from './pages/Assets';
@@ -19,6 +21,7 @@ function ProtectedRoute({ children, roles }) {
 
 export default function App() {
   const { user, loading } = useAuth();
+  const [navOpen, setNavOpen] = useState(false);
 
   if (loading) return null;
 
@@ -33,7 +36,14 @@ export default function App() {
 
   return (
     <div className="app-layout">
-      <Sidebar />
+      <header className="mobile-header">
+        <button className="btn-icon mobile-menu-btn" onClick={() => setNavOpen(true)}>
+          <Menu size={22} />
+        </button>
+        <span className="mobile-title">AssetInventory</span>
+        <span />
+      </header>
+      <Sidebar open={navOpen} onClose={() => setNavOpen(false)} />
       <main className="main-content">
         <Routes>
           <Route path="/" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
