@@ -1,7 +1,7 @@
 const pool = require('../config/database');
 
 const assetModel = {
-  async findAll({ page = 1, limit = 50, status, asset_type, location, search, sort_by = 'created_at', sort_order = 'DESC' }) {
+  async findAll({ page = 1, limit = 50, status, asset_type, location, client, search, sort_by = 'created_at', sort_order = 'DESC' }) {
     const conditions = [];
     const values = [];
     let paramIdx = 1;
@@ -15,18 +15,22 @@ const assetModel = {
       values.push(asset_type);
     }
     if (location) {
-      conditions.push(`a.location ILIKE $${paramIdx++}`);
-      values.push(`%${location}%`);
+      conditions.push(`a.location = $${paramIdx++}`);
+      values.push(location);
+    }
+    if (client) {
+      conditions.push(`a.client = $${paramIdx++}`);
+      values.push(client);
     }
     if (search) {
-      conditions.push(`(a.serial_number ILIKE $${paramIdx} OR a.make ILIKE $${paramIdx} OR a.model ILIKE $${paramIdx} OR a.assigned_to ILIKE $${paramIdx})`);
+      conditions.push(`(a.serial_number ILIKE $${paramIdx} OR a.device_name ILIKE $${paramIdx} OR a.make ILIKE $${paramIdx} OR a.model ILIKE $${paramIdx} OR a.assigned_to ILIKE $${paramIdx} OR a.incident_number ILIKE $${paramIdx})`);
       values.push(`%${search}%`);
       paramIdx++;
     }
 
     const whereClause = conditions.length > 0 ? `WHERE ${conditions.join(' AND ')}` : '';
 
-    const allowedSorts = ['serial_number', 'asset_type', 'make', 'model', 'location', 'status', 'warranty_date', 'created_at', 'updated_at'];
+    const allowedSorts = ['serial_number', 'device_name', 'asset_type', 'make', 'model', 'location', 'client', 'status', 'warranty_date', 'incident_number', 'created_at', 'updated_at'];
     const safeSort = allowedSorts.includes(sort_by) ? sort_by : 'created_at';
     const safeOrder = sort_order.toUpperCase() === 'ASC' ? 'ASC' : 'DESC';
 
@@ -60,12 +64,12 @@ const assetModel = {
     return rows[0];
   },
 
-  async create({ serial_number, asset_type, make, model, location, client, assigned_to, status, warranty_date, commentary }) {
+  async create({ serial_number, device_name, asset_type, make, model, location, client, assigned_to, status, warranty_date, commentary, incident_number }) {
     const { rows } = await pool.query(
-      `INSERT INTO assets (serial_number, asset_type, make, model, location, client, assigned_to, status, warranty_date, commentary)
-       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)
+      `INSERT INTO assets (serial_number, device_name, asset_type, make, model, location, client, assigned_to, status, warranty_date, commentary, incident_number)
+       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12)
        RETURNING *`,
-      [serial_number, asset_type, make || null, model || null, location || null, client || null, assigned_to || null, status || 'Available', warranty_date || null, commentary || null]
+      [serial_number, device_name || null, asset_type, make || null, model || null, location || null, client || null, assigned_to || null, status || 'Available', warranty_date || null, commentary || null, incident_number || null]
     );
     return rows[0];
   },
@@ -110,10 +114,11 @@ const assetModel = {
   },
 
   async getDashboardStats() {
-    const [byStatus, byType, byLocation, totalCount] = await Promise.all([
+    const [byStatus, byType, byLocation, byClient, totalCount] = await Promise.all([
       pool.query(`SELECT status, COUNT(*)::int as count FROM assets GROUP BY status ORDER BY count DESC`),
       pool.query(`SELECT asset_type, COUNT(*)::int as count FROM assets GROUP BY asset_type ORDER BY count DESC`),
       pool.query(`SELECT COALESCE(location, 'Unspecified') as location, COUNT(*)::int as count FROM assets GROUP BY location ORDER BY count DESC`),
+      pool.query(`SELECT COALESCE(client, 'Unassigned') as client, COUNT(*)::int as count FROM assets GROUP BY client ORDER BY count DESC`),
       pool.query(`SELECT COUNT(*)::int as total FROM assets`),
     ]);
 
@@ -122,6 +127,7 @@ const assetModel = {
       byStatus: byStatus.rows,
       byType: byType.rows,
       byLocation: byLocation.rows,
+      byClient: byClient.rows,
     };
   },
 

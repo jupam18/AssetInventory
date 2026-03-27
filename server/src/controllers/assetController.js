@@ -6,13 +6,14 @@ const { ASSET_STATUSES, STATUS_TRANSITIONS } = require('../config/constants');
 const assetController = {
   async list(req, res) {
     try {
-      const { page, limit, status, asset_type, location, search, sort_by, sort_order } = req.query;
+      const { page, limit, status, asset_type, location, client, search, sort_by, sort_order } = req.query;
       const result = await assetModel.findAll({
         page: parseInt(page) || 1,
         limit: Math.min(parseInt(limit) || 50, 200),
         status,
         asset_type,
         location,
+        client,
         search,
         sort_by,
         sort_order,
@@ -39,7 +40,7 @@ const assetController = {
 
   async create(req, res) {
     try {
-      const { serial_number, asset_type, make, model, location, client, assigned_to, status, warranty_date, commentary } = req.body;
+      const { serial_number, device_name, asset_type, make, model, location, client, assigned_to, status, warranty_date, commentary, incident_number } = req.body;
 
       if (!serial_number || !asset_type) {
         return res.status(400).json({ error: 'serial_number and asset_type are required' });
@@ -49,15 +50,15 @@ const assetController = {
       }
 
       const asset = await assetModel.create({
-        serial_number, asset_type, make, model, location, client, assigned_to,
-        status: status || 'Available', warranty_date, commentary,
+        serial_number, device_name, asset_type, make, model, location, client, assigned_to,
+        status: status || 'Available', warranty_date, commentary, incident_number,
       });
 
       await auditModel.create({
         asset_id: asset.id,
         serial_number: asset.serial_number,
         action: 'CREATED',
-        new_value: JSON.stringify({ asset_type, status: asset.status, location, client, assigned_to }),
+        new_value: JSON.stringify({ device_name, asset_type, status: asset.status, location, client, assigned_to }),
         performed_by: req.user.full_name,
         comment: commentary || 'Asset created',
       });
@@ -79,7 +80,7 @@ const assetController = {
         return res.status(404).json({ error: 'Asset not found' });
       }
 
-      const { serial_number, asset_type, make, model, location, client, assigned_to, status, warranty_date, commentary } = req.body;
+      const { serial_number, device_name, asset_type, make, model, location, client, assigned_to, status, warranty_date, commentary, incident_number } = req.body;
 
       if (status && !ASSET_STATUSES.includes(status)) {
         return res.status(400).json({ error: `Invalid status` });
@@ -98,7 +99,7 @@ const assetController = {
       const fields = {};
       const auditEntries = [];
 
-      const trackedFields = { serial_number, asset_type, make, model, location, client, assigned_to, status, warranty_date, commentary };
+      const trackedFields = { serial_number, device_name, asset_type, make, model, location, client, assigned_to, status, warranty_date, commentary, incident_number };
       for (const [key, value] of Object.entries(trackedFields)) {
         if (value !== undefined) {
           const oldVal = existing[key];
@@ -108,7 +109,7 @@ const assetController = {
             auditEntries.push({
               asset_id: existing.id,
               serial_number: existing.serial_number,
-              action: key === 'status' ? 'STATUS_CHANGE' : key === 'assigned_to' ? 'ASSIGNMENT_CHANGE' : key === 'location' ? 'LOCATION_CHANGE' : key === 'client' ? 'CLIENT_CHANGE' : 'FIELD_UPDATE',
+              action: key === 'status' ? 'STATUS_CHANGE' : key === 'assigned_to' ? 'ASSIGNMENT_CHANGE' : key === 'location' ? 'LOCATION_CHANGE' : key === 'client' ? 'CLIENT_CHANGE' : key === 'incident_number' ? 'INCIDENT_UPDATE' : 'FIELD_UPDATE',
               field_changed: key,
               old_value: String(oldVal ?? ''),
               new_value: String(newVal ?? ''),

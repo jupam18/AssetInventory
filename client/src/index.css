@@ -458,7 +458,7 @@ textarea.form-control { min-height: 80px; resize: vertical; }
   margin-top: 24px;
 }
 
-.dashboard-grid .card { min-height: 250px; }
+.dashboard-grid .card { min-height: 200px; }
 
 /* Warranty alert list */
 .warranty-list { list-style: none; }

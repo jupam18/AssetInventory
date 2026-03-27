@@ -3,7 +3,7 @@ const pool = require('../config/database');
 const userModel = {
   async findByUsername(username) {
     const { rows } = await pool.query(
-      'SELECT * FROM users WHERE username = $1 AND is_active = true',
+      'SELECT * FROM users WHERE LOWER(username) = LOWER($1) AND is_active = true',
       [username]
     );
     return rows[0];

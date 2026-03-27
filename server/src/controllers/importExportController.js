@@ -3,9 +3,7 @@ const { stringify } = require('csv-stringify/sync');
 const ExcelJS = require('exceljs');
 const assetModel = require('../models/assetModel');
 const auditModel = require('../models/auditModel');
-const { ASSET_TYPES, ASSET_STATUSES } = require('../config/constants');
-
-const CSV_HEADERS = ['serial_number', 'asset_type', 'make', 'model', 'location', 'assigned_to', 'status', 'warranty_date', 'commentary'];
+const { ASSET_STATUSES } = require('../config/constants');
 
 const importExportController = {
   async importCSV(req, res) {
@@ -30,14 +28,14 @@ const importExportController = {
 
       for (let i = 0; i < records.length; i++) {
         const row = records[i];
-        const rowNum = i + 2; // +2 for 1-based + header row
+        const rowNum = i + 2;
 
         if (!row.serial_number) {
           results.errors.push({ row: rowNum, error: 'Missing serial_number' });
           continue;
         }
-        if (!row.asset_type || !ASSET_TYPES.includes(row.asset_type)) {
-          results.errors.push({ row: rowNum, error: `Invalid asset_type: "${row.asset_type}". Must be: ${ASSET_TYPES.join(', ')}` });
+        if (!row.asset_type) {
+          results.errors.push({ row: rowNum, error: 'Missing asset_type' });
           continue;
         }
         if (row.status && !ASSET_STATUSES.includes(row.status)) {
@@ -48,14 +46,17 @@ const importExportController = {
         try {
           const asset = await assetModel.create({
             serial_number: row.serial_number,
+            device_name: row.device_name || null,
             asset_type: row.asset_type,
             make: row.make || null,
             model: row.model || null,
             location: row.location || null,
+            client: row.client || null,
             assigned_to: row.assigned_to || null,
             status: row.status || 'Available',
             warranty_date: row.warranty_date || null,
             commentary: row.commentary || null,
+            incident_number: row.incident_number || null,
           });
 
           await auditModel.create({
@@ -94,20 +95,22 @@ const importExportController = {
 
       const csvData = assets.map(a => ({
         serial_number: a.serial_number,
+        device_name: a.device_name || '',
         asset_type: a.asset_type,
         make: a.make || '',
         model: a.model || '',
         location: a.location || '',
+        client: a.client || '',
         assigned_to: a.assigned_to || '',
         status: a.status,
         warranty_date: a.warranty_date ? new Date(a.warranty_date).toISOString().split('T')[0] : '',
+        incident_number: a.incident_number || '',
         commentary: a.commentary || '',
         created_at: a.created_at,
         updated_at: a.updated_at,
       }));
 
       const csv = stringify(csvData, { header: true });
-
       res.setHeader('Content-Type', 'text/csv');
       res.setHeader('Content-Disposition', `attachment; filename=assets_export_${new Date().toISOString().split('T')[0]}.csv`);
       res.send(csv);
@@ -129,33 +132,37 @@ const importExportController = {
       const sheet = workbook.addWorksheet('Assets');
       sheet.columns = [
         { header: 'Serial Number', key: 'serial_number', width: 20 },
+        { header: 'Device Name', key: 'device_name', width: 20 },
         { header: 'Type', key: 'asset_type', width: 12 },
         { header: 'Make', key: 'make', width: 15 },
         { header: 'Model', key: 'model', width: 15 },
         { header: 'Location', key: 'location', width: 20 },
+        { header: 'Client', key: 'client', width: 20 },
         { header: 'Assigned To', key: 'assigned_to', width: 20 },
         { header: 'Status', key: 'status', width: 18 },
         { header: 'Warranty Date', key: 'warranty_date', width: 15 },
+        { header: 'Incident Number', key: 'incident_number', width: 18 },
         { header: 'Commentary', key: 'commentary', width: 30 },
         { header: 'Created At', key: 'created_at', width: 20 },
         { header: 'Updated At', key: 'updated_at', width: 20 },
       ];
 
-      // Style header row
-      sheet.getRow(1).font = { bold: true };
       sheet.getRow(1).fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FF4472C4' } };
       sheet.getRow(1).font = { bold: true, color: { argb: 'FFFFFFFF' } };
 
       assets.forEach(a => {
         sheet.addRow({
           serial_number: a.serial_number,
+          device_name: a.device_name || '',
           asset_type: a.asset_type,
           make: a.make || '',
           model: a.model || '',
           location: a.location || '',
+          client: a.client || '',
           assigned_to: a.assigned_to || '',
           status: a.status,
           warranty_date: a.warranty_date ? new Date(a.warranty_date).toISOString().split('T')[0] : '',
+          incident_number: a.incident_number || '',
           commentary: a.commentary || '',
           created_at: a.created_at,
           updated_at: a.updated_at,
@@ -164,7 +171,6 @@ const importExportController = {
 
       res.setHeader('Content-Type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
       res.setHeader('Content-Disposition', `attachment; filename=assets_export_${new Date().toISOString().split('T')[0]}.xlsx`);
-
       await workbook.xlsx.write(res);
       res.end();
     } catch (err) {
