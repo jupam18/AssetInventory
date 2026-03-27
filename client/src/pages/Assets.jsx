@@ -1,4 +1,5 @@
 import { useState, useEffect, useCallback } from 'react';
+import { useSearchParams } from 'react-router-dom';
 import api from '../services/api';
 import { useAuth } from '../context/AuthContext';
 import Modal from '../components/Modal';
@@ -32,13 +33,22 @@ export default function Assets() {
   const canEdit = hasRole('admin', 'technician');
   const canDelete = hasRole('admin');
   const settings = useSettings();
+  const [searchParams] = useSearchParams();
 
   const [assets, setAssets] = useState([]);
   const [total, setTotal] = useState(0);
   const [page, setPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
   const [loading, setLoading] = useState(true);
-  const [filters, setFilters] = useState({ search: '', status: '', asset_type: '', sort_by: 'created_at', sort_order: 'DESC' });
+  const [filters, setFilters] = useState({
+    search: searchParams.get('search') || '',
+    status: searchParams.get('status') || '',
+    asset_type: searchParams.get('asset_type') || '',
+    location: searchParams.get('location') || '',
+    client: searchParams.get('client') || '',
+    sort_by: 'created_at',
+    sort_order: 'DESC',
+  });
 
   const [showModal, setShowModal] = useState(false);
   const [showDetail, setShowDetail] = useState(false);
@@ -160,6 +170,14 @@ export default function Assets() {
         <select className="form-control" value={filters.asset_type} onChange={e => { setFilters(f => ({ ...f, asset_type: e.target.value })); setPage(1); }}>
           <option value="">All Types</option>
           {settings.asset_type.map(t => <option key={t} value={t}>{t}</option>)}
+        </select>
+        <select className="form-control" value={filters.location} onChange={e => { setFilters(f => ({ ...f, location: e.target.value })); setPage(1); }}>
+          <option value="">All Locations</option>
+          {settings.location.map(l => <option key={l} value={l}>{l}</option>)}
+        </select>
+        <select className="form-control" value={filters.client} onChange={e => { setFilters(f => ({ ...f, client: e.target.value })); setPage(1); }}>
+          <option value="">All Clients</option>
+          {settings.client.map(c => <option key={c} value={c}>{c}</option>)}
         </select>
       </div>
 
