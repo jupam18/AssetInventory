@@ -8,13 +8,13 @@ const ASSET_STATUSES = [
   'Returned to Client',
 ];
 
-// Valid status transitions following ITIL lifecycle
+// All statuses can transition to any other status
 const STATUS_TRANSITIONS = {
-  'Available': ['Assigned', 'In Maintenance', 'Decommissioned'],
-  'Assigned': ['Available', 'In Maintenance', 'Returned to Client'],
-  'In Maintenance': ['Available', 'Decommissioned'],
-  'Decommissioned': [],
-  'Returned to Client': [],
+  'Available': ['Assigned', 'In Maintenance', 'Decommissioned', 'Returned to Client'],
+  'Assigned': ['Available', 'In Maintenance', 'Decommissioned', 'Returned to Client'],
+  'In Maintenance': ['Available', 'Assigned', 'Decommissioned', 'Returned to Client'],
+  'Decommissioned': ['Available', 'Assigned', 'In Maintenance', 'Returned to Client'],
+  'Returned to Client': ['Available', 'Assigned', 'In Maintenance', 'Decommissioned'],
 };
 
 const ROLES = {
