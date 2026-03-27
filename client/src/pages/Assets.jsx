@@ -2,18 +2,36 @@ import { useState, useEffect, useCallback } from 'react';
 import api from '../services/api';
 import { useAuth } from '../context/AuthContext';
 import Modal from '../components/Modal';
-import { statusBadge, formatDate, ASSET_TYPES, ASSET_STATUSES } from '../utils/helpers';
-import { Plus, Search, Edit2, Trash2, Eye, ChevronLeft, ChevronRight } from 'lucide-react';
+import { statusBadge, formatDate, ASSET_STATUSES } from '../utils/helpers';
+import { Plus, Edit2, Trash2, Eye, ChevronLeft, ChevronRight } from 'lucide-react';
 
 const emptyAsset = {
-  serial_number: '', asset_type: 'Laptop', make: '', model: '',
-  location: '', assigned_to: '', status: 'Available', warranty_date: '', commentary: '',
+  serial_number: '', asset_type: '', make: '', model: '',
+  location: '', client: '', assigned_to: '', status: 'Available',
+  warranty_date: '', commentary: '',
 };
+
+function useSettings() {
+  const [settings, setSettings] = useState({ asset_type: [], location: [], client: [] });
+
+  useEffect(() => {
+    api.get('/settings').then(r => {
+      setSettings({
+        asset_type: (r.data.asset_type || []).map(x => x.value),
+        location: (r.data.location || []).map(x => x.value),
+        client: (r.data.client || []).map(x => x.value),
+      });
+    }).catch(() => {});
+  }, []);
+
+  return settings;
+}
 
 export default function Assets() {
   const { hasRole } = useAuth();
   const canEdit = hasRole('admin', 'technician');
   const canDelete = hasRole('admin');
+  const settings = useSettings();
 
   const [assets, setAssets] = useState([]);
   const [total, setTotal] = useState(0);
@@ -50,7 +68,7 @@ export default function Assets() {
   useEffect(() => { fetchAssets(); }, [fetchAssets]);
 
   const openCreate = () => {
-    setForm(emptyAsset);
+    setForm({ ...emptyAsset, asset_type: settings.asset_type[0] || '' });
     setEditMode(false);
     setError('');
     setAuditComment('');
@@ -68,7 +86,7 @@ export default function Assets() {
     setShowModal(true);
   };
 
-  const openDetail = async (asset) => {
+  const openDetail = (asset) => {
     setSelectedAsset(asset);
     setShowDetail(true);
   };
@@ -114,7 +132,7 @@ export default function Assets() {
 
   const sortIndicator = (col) => {
     if (filters.sort_by !== col) return '';
-    return filters.sort_order === 'ASC' ? ' \u25B2' : ' \u25BC';
+    return filters.sort_order === 'ASC' ? ' ▲' : ' ▼';
   };
 
   return (
@@ -141,7 +159,7 @@ export default function Assets() {
         </select>
         <select className="form-control" value={filters.asset_type} onChange={e => { setFilters(f => ({ ...f, asset_type: e.target.value })); setPage(1); }}>
           <option value="">All Types</option>
-          {ASSET_TYPES.map(t => <option key={t} value={t}>{t}</option>)}
+          {settings.asset_type.map(t => <option key={t} value={t}>{t}</option>)}
         </select>
       </div>
 
@@ -155,6 +173,7 @@ export default function Assets() {
                 <th onClick={() => handleSort('make')}>Make{sortIndicator('make')}</th>
                 <th onClick={() => handleSort('model')}>Model{sortIndicator('model')}</th>
                 <th onClick={() => handleSort('location')}>Location{sortIndicator('location')}</th>
+                <th onClick={() => handleSort('client')}>Client{sortIndicator('client')}</th>
                 <th>Assigned To</th>
                 <th onClick={() => handleSort('status')}>Status{sortIndicator('status')}</th>
                 <th onClick={() => handleSort('warranty_date')}>Warranty{sortIndicator('warranty_date')}</th>
@@ -163,9 +182,9 @@ export default function Assets() {
             </thead>
             <tbody>
               {loading ? (
-                <tr><td colSpan={9} className="text-center text-muted">Loading...</td></tr>
+                <tr><td colSpan={10} className="text-center text-muted">Loading...</td></tr>
               ) : assets.length === 0 ? (
-                <tr><td colSpan={9} className="text-center text-muted">No assets found</td></tr>
+                <tr><td colSpan={10} className="text-center text-muted">No assets found</td></tr>
               ) : assets.map(a => (
                 <tr key={a.id}>
                   <td><strong>{a.serial_number}</strong></td>
@@ -173,6 +192,7 @@ export default function Assets() {
                   <td>{a.make || '—'}</td>
                   <td>{a.model || '—'}</td>
                   <td>{a.location || '—'}</td>
+                  <td>{a.client || '—'}</td>
                   <td>{a.assigned_to || '—'}</td>
                   <td><span className={`badge ${statusBadge(a.status)}`}>{a.status}</span></td>
                   <td>{formatDate(a.warranty_date)}</td>
@@ -226,9 +246,10 @@ export default function Assets() {
               <input className="form-control" value={form.serial_number} onChange={e => setForm(f => ({ ...f, serial_number: e.target.value }))} disabled={editMode} required />
             </div>
             <div className="form-group">
-              <label>Asset Type *</label>
+              <label>Hardware Type *</label>
               <select className="form-control" value={form.asset_type} onChange={e => setForm(f => ({ ...f, asset_type: e.target.value }))}>
-                {ASSET_TYPES.map(t => <option key={t} value={t}>{t}</option>)}
+                <option value="">Select type...</option>
+                {settings.asset_type.map(t => <option key={t} value={t}>{t}</option>)}
               </select>
             </div>
           </div>
@@ -245,20 +266,32 @@ export default function Assets() {
           <div className="form-row">
             <div className="form-group">
               <label>Location</label>
-              <input className="form-control" value={form.location || ''} onChange={e => setForm(f => ({ ...f, location: e.target.value }))} />
+              <select className="form-control" value={form.location || ''} onChange={e => setForm(f => ({ ...f, location: e.target.value }))}>
+                <option value="">Select location...</option>
+                {settings.location.map(l => <option key={l} value={l}>{l}</option>)}
+              </select>
             </div>
+            <div className="form-group">
+              <label>Client</label>
+              <select className="form-control" value={form.client || ''} onChange={e => setForm(f => ({ ...f, client: e.target.value }))}>
+                <option value="">Select client...</option>
+                {settings.client.map(c => <option key={c} value={c}>{c}</option>)}
+              </select>
+            </div>
+          </div>
+          <div className="form-row">
             <div className="form-group">
               <label>Assigned To</label>
               <input className="form-control" value={form.assigned_to || ''} onChange={e => setForm(f => ({ ...f, assigned_to: e.target.value }))} placeholder="Employee name or leave empty" />
             </div>
-          </div>
-          <div className="form-row">
             <div className="form-group">
               <label>Status</label>
               <select className="form-control" value={form.status} onChange={e => setForm(f => ({ ...f, status: e.target.value }))}>
                 {ASSET_STATUSES.map(s => <option key={s} value={s}>{s}</option>)}
               </select>
             </div>
+          </div>
+          <div className="form-row">
             <div className="form-group">
               <label>Warranty Date</label>
               <input className="form-control" type="date" value={form.warranty_date || ''} onChange={e => setForm(f => ({ ...f, warranty_date: e.target.value }))} />
@@ -312,11 +345,15 @@ function AssetDetail({ asset }) {
       </div>
       <div className="form-row">
         <div className="form-group"><label>Location</label><p>{asset.location || '—'}</p></div>
-        <div className="form-group"><label>Assigned To</label><p>{asset.assigned_to || '—'}</p></div>
+        <div className="form-group"><label>Client</label><p>{asset.client || '—'}</p></div>
       </div>
       <div className="form-row">
+        <div className="form-group"><label>Assigned To</label><p>{asset.assigned_to || '—'}</p></div>
         <div className="form-group"><label>Warranty Date</label><p>{formatDate(asset.warranty_date)}</p></div>
+      </div>
+      <div className="form-row">
         <div className="form-group"><label>Created</label><p>{formatDate(asset.created_at)}</p></div>
+        <div className="form-group"><label>Updated</label><p>{formatDate(asset.updated_at)}</p></div>
       </div>
       {asset.commentary && (
         <div className="form-group"><label>Commentary</label><p>{asset.commentary}</p></div>

@@ -7,6 +7,7 @@ import Assets from './pages/Assets';
 import AuditLog from './pages/AuditLog';
 import ImportExport from './pages/ImportExport';
 import Users from './pages/Users';
+import Settings from './pages/Settings';
 
 function ProtectedRoute({ children, roles }) {
   const { user, loading } = useAuth();
@@ -40,6 +41,7 @@ export default function App() {
           <Route path="/audit" element={<ProtectedRoute><AuditLog /></ProtectedRoute>} />
           <Route path="/export" element={<ProtectedRoute><ImportExport /></ProtectedRoute>} />
           <Route path="/users" element={<ProtectedRoute roles={['admin']}><Users /></ProtectedRoute>} />
+          <Route path="/settings" element={<ProtectedRoute roles={['admin']}><Settings /></ProtectedRoute>} />
           <Route path="/login" element={<Navigate to="/" />} />
           <Route path="*" element={<Navigate to="/" />} />
         </Routes>

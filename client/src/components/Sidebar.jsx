@@ -1,6 +1,6 @@
 import { NavLink } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
-import { LayoutDashboard, Monitor, ClipboardList, FileText, Users, LogOut } from 'lucide-react';
+import { LayoutDashboard, Monitor, ClipboardList, FileText, Users, Settings, LogOut } from 'lucide-react';
 
 export default function Sidebar() {
   const { user, logout, hasRole } = useAuth();
@@ -27,6 +27,11 @@ export default function Sidebar() {
         {hasRole('admin') && (
           <NavLink to="/users">
             <Users size={18} /> User Management
+          </NavLink>
+        )}
+        {hasRole('admin') && (
+          <NavLink to="/settings">
+            <Settings size={18} /> Settings
           </NavLink>
         )}
       </nav>

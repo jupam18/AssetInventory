@@ -5,7 +5,7 @@
   "scripts": {
     "dev": "nodemon src/index.js",
     "start": "node src/index.js",
-    "migrate": "node migrations/run.js",
+    "migrate": "node migrations/run.js && node migrations/002_settings.js",
     "seed": "node migrations/seed.js"
   },
   "dependencies": {

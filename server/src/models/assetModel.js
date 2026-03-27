@@ -60,12 +60,12 @@ const assetModel = {
     return rows[0];
   },
 
-  async create({ serial_number, asset_type, make, model, location, assigned_to, status, warranty_date, commentary }) {
+  async create({ serial_number, asset_type, make, model, location, client, assigned_to, status, warranty_date, commentary }) {
     const { rows } = await pool.query(
-      `INSERT INTO assets (serial_number, asset_type, make, model, location, assigned_to, status, warranty_date, commentary)
-       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)
+      `INSERT INTO assets (serial_number, asset_type, make, model, location, client, assigned_to, status, warranty_date, commentary)
+       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)
        RETURNING *`,
-      [serial_number, asset_type, make || null, model || null, location || null, assigned_to || null, status || 'Available', warranty_date || null, commentary || null]
+      [serial_number, asset_type, make || null, model || null, location || null, client || null, assigned_to || null, status || 'Available', warranty_date || null, commentary || null]
     );
     return rows[0];
   },
