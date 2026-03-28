@@ -1,6 +1,7 @@
 const assetModel = require('../models/assetModel');
 const auditModel = require('../models/auditModel');
 const settingsModel = require('../models/settingsModel');
+const pool = require('../config/database');
 const { ASSET_STATUSES, STATUS_TRANSITIONS } = require('../config/constants');
 
 const assetController = {
@@ -165,11 +166,20 @@ const assetController = {
 
   async getDashboard(req, res) {
     try {
-      const [stats, warrantyAlerts] = await Promise.all([
+      const [stats, warrantyAlerts, incidentStatsRes, incidentsByTypeRes, openHighPriorityRes] = await Promise.all([
         assetModel.getDashboardStats(),
         assetModel.getWarrantyAlerts(30),
+        pool.query(`SELECT status, COUNT(*) as count FROM incidents GROUP BY status`),
+        pool.query(`SELECT type, COUNT(*) as count FROM incidents GROUP BY type`),
+        pool.query(`SELECT COUNT(*) as count FROM incidents WHERE status != 'Closed' AND priority = 'High'`),
       ]);
-      res.json({ ...stats, warrantyAlerts });
+      res.json({
+        ...stats,
+        warrantyAlerts,
+        incidentStats: incidentStatsRes.rows,
+        incidentsByType: incidentsByTypeRes.rows,
+        openHighPriority: parseInt(openHighPriorityRes.rows[0].count),
+      });
     } catch (err) {
       console.error('Dashboard error:', err);
       res.status(500).json({ error: 'Internal server error' });
