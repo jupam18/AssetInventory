@@ -4,7 +4,7 @@ import api, { getIncidents, getIncidentById, createIncident, updateIncident, del
 import { useAuth } from '../context/AuthContext';
 import Modal from '../components/Modal';
 import {
-  formatDate, formatDateTime, statusBadge,
+  formatDate, formatDateTime,
   priorityBadge, incidentStatusBadge, incidentTypeBadge,
   INCIDENT_STATUSES, INCIDENT_TYPES, INCIDENT_PRIORITIES,
 } from '../utils/helpers';
@@ -378,29 +378,6 @@ export default function Incidents() {
               readonly={ro('asset_ids')}
             />
           </div>
-
-          {editMode && form.assets?.length > 0 && (
-            <div className="table-container" style={{ marginBottom: 16 }}>
-              <table>
-                <thead><tr><th>Device Name</th><th>Serial #</th><th>Type</th><th>Status</th></tr></thead>
-                <tbody>
-                  {form.assets.map(a => (
-                    <tr
-                      key={a.id}
-                      style={{ cursor: 'pointer' }}
-                      onClick={() => navigate(`/assets?search=${encodeURIComponent(a.serial_number)}`)}
-                      title="View asset"
-                    >
-                      <td><strong>{a.device_name || '—'}</strong></td>
-                      <td>{a.serial_number}</td>
-                      <td>{a.asset_type}</td>
-                      <td><span className={`badge ${statusBadge(a.status)}`}>{a.status}</span></td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          )}
 
           <div className="form-group">
             <label>Body</label>

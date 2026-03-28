@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import api from '../services/api';
 import { formatDateTime } from '../utils/helpers';
-import { Search, ChevronLeft, ChevronRight } from 'lucide-react';
+import { ChevronLeft, ChevronRight } from 'lucide-react';
 
 export default function AuditLog() {
   const [logs, setLogs] = useState([]);
@@ -9,7 +9,9 @@ export default function AuditLog() {
   const [page, setPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
   const [loading, setLoading] = useState(true);
-  const [filters, setFilters] = useState({ serial_number: '', action: '', performed_by: '' });
+  const [filters, setFilters] = useState({
+    search: '', action: '', performed_by: '', field_changed: '', comment: '',
+  });
 
   const fetchLogs = useCallback(async () => {
     setLoading(true);
@@ -29,6 +31,11 @@ export default function AuditLog() {
 
   useEffect(() => { fetchLogs(); }, [fetchLogs]);
 
+  const setFilter = (key, val) => {
+    setFilters(f => ({ ...f, [key]: val }));
+    setPage(1);
+  };
+
   const ACTION_COLORS = {
     'CREATED': 'badge-available',
     'STATUS_CHANGE': 'badge-assigned',
@@ -45,19 +52,25 @@ export default function AuditLog() {
       </div>
 
       <div className="filters-bar">
-        <input className="form-control" placeholder="Serial number..." value={filters.serial_number}
-          onChange={e => { setFilters(f => ({ ...f, serial_number: e.target.value })); setPage(1); }} />
-        <select className="form-control" value={filters.action} onChange={e => { setFilters(f => ({ ...f, action: e.target.value })); setPage(1); }}>
+        <input className="form-control search-input" placeholder="Search reference / values..."
+          value={filters.search} onChange={e => setFilter('search', e.target.value)} />
+        <select className="form-control" value={filters.action} onChange={e => setFilter('action', e.target.value)}>
           <option value="">All Actions</option>
           <option value="CREATED">Created</option>
           <option value="STATUS_CHANGE">Status Change</option>
           <option value="ASSIGNMENT_CHANGE">Assignment Change</option>
           <option value="LOCATION_CHANGE">Location Change</option>
+          <option value="CLIENT_CHANGE">Client Change</option>
+          <option value="INCIDENT_UPDATE">Incident Update</option>
           <option value="FIELD_UPDATE">Field Update</option>
           <option value="DELETED">Deleted</option>
         </select>
-        <input className="form-control" placeholder="Performed by..." value={filters.performed_by}
-          onChange={e => { setFilters(f => ({ ...f, performed_by: e.target.value })); setPage(1); }} />
+        <input className="form-control" placeholder="Field changed..."
+          value={filters.field_changed} onChange={e => setFilter('field_changed', e.target.value)} />
+        <input className="form-control" placeholder="Performed by..."
+          value={filters.performed_by} onChange={e => setFilter('performed_by', e.target.value)} />
+        <input className="form-control" placeholder="Comment..."
+          value={filters.comment} onChange={e => setFilter('comment', e.target.value)} />
       </div>
 
       <div className="card">

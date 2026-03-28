@@ -71,14 +71,15 @@ const auditModel = {
     };
   },
 
-  async findAll({ page = 1, limit = 50, serial_number, action, performed_by } = {}) {
+  async findAll({ page = 1, limit = 50, search, action, performed_by, field_changed, comment } = {}) {
     const conditions = [];
     const values = [];
     let paramIdx = 1;
 
-    if (serial_number) {
-      conditions.push(`serial_number ILIKE $${paramIdx++}`);
-      values.push(`%${serial_number}%`);
+    if (search) {
+      conditions.push(`(serial_number ILIKE $${paramIdx} OR incident_number ILIKE $${paramIdx} OR old_value ILIKE $${paramIdx} OR new_value ILIKE $${paramIdx})`);
+      values.push(`%${search}%`);
+      paramIdx++;
     }
     if (action) {
       conditions.push(`action = $${paramIdx++}`);
@@ -87,6 +88,14 @@ const auditModel = {
     if (performed_by) {
       conditions.push(`performed_by ILIKE $${paramIdx++}`);
       values.push(`%${performed_by}%`);
+    }
+    if (field_changed) {
+      conditions.push(`field_changed ILIKE $${paramIdx++}`);
+      values.push(`%${field_changed}%`);
+    }
+    if (comment) {
+      conditions.push(`comment ILIKE $${paramIdx++}`);
+      values.push(`%${comment}%`);
     }
 
     const whereClause = conditions.length > 0 ? `WHERE ${conditions.join(' AND ')}` : '';

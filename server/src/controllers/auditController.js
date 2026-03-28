@@ -17,13 +17,15 @@ const auditController = {
 
   async list(req, res) {
     try {
-      const { page, limit, serial_number, action, performed_by } = req.query;
+      const { page, limit, search, action, performed_by, field_changed, comment } = req.query;
       const result = await auditModel.findAll({
         page: parseInt(page) || 1,
         limit: parseInt(limit) || 50,
-        serial_number,
+        search,
         action,
         performed_by,
+        field_changed,
+        comment,
       });
       res.json(result);
     } catch (err) {
