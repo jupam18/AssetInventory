@@ -1,8 +1,9 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import api from '../services/api';
+import { useAuth } from '../context/AuthContext';
 import { formatDate, daysUntil, CHART_COLORS } from '../utils/helpers';
-import { Monitor, CheckCircle, Wrench, Archive, AlertTriangle, RefreshCw } from 'lucide-react';
+import { Monitor, CheckCircle, Wrench, Archive, AlertTriangle, RefreshCw, AlertCircle, Clock, Pause } from 'lucide-react';
 
 const STATUS_ICONS = {
   'Available': <CheckCircle size={24} />,
@@ -38,10 +39,18 @@ function ClickableBar({ label, count, max, color, onClick }) {
   );
 }
 
+const INCIDENT_STATUS_CONFIG = {
+  'Open':        { color: 'blue',   icon: <AlertCircle size={24} /> },
+  'In Progress': { color: 'orange', icon: <RefreshCw size={24} /> },
+  'Pending':     { color: 'yellow', icon: <Pause size={24} /> },
+  'Closed':      { color: 'green',  icon: <CheckCircle size={24} /> },
+};
+
 export default function Dashboard() {
   const [data, setData] = useState(null);
   const [loading, setLoading] = useState(true);
   const navigate = useNavigate();
+  const { hasRole } = useAuth();
 
   const load = () => {
     setLoading(true);
@@ -57,11 +66,32 @@ export default function Dashboard() {
   const maxByType = Math.max(...(data.byType?.map(t => t.count) || [1]), 1);
   const maxByLocation = Math.max(...(data.byLocation?.map(l => l.count) || [1]), 1);
   const maxByClient = Math.max(...(data.byClient?.map(c => c.count) || [1]), 1);
+  const maxByIncidentType = Math.max(...(data.incidentsByType?.map(t => t.count) || [1]), 1);
 
   const goTo = (params) => navigate(`/assets?${new URLSearchParams(params).toString()}`);
+  const goToIncident = (params) => navigate(`/incidents?${new URLSearchParams(params).toString()}`);
+
+  const incidentByStatus = {};
+  data.incidentStats?.forEach(s => { incidentByStatus[s.status] = parseInt(s.count); });
+
+  const showIncidentSection = !hasRole('provider');
+  const showIncidentBanner = data.openHighPriority > 0 && hasRole('admin', 'full_operator', 'incident_manager');
 
   return (
     <>
+      {showIncidentBanner && (
+        <div
+          className="alert alert-danger dashboard-incident-banner"
+          style={{ cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 10, marginBottom: 16 }}
+          onClick={() => goToIncident({ priority: 'High', status: 'Open' })}
+          title="View open high priority incidents"
+        >
+          <AlertTriangle size={18} />
+          <strong>{data.openHighPriority} open high priority incident{data.openHighPriority !== 1 ? 's' : ''}</strong>
+          <span style={{ marginLeft: 'auto', fontSize: '0.85em', opacity: 0.8 }}>Click to view →</span>
+        </div>
+      )}
+
       <div className="page-header">
         <h2>Dashboard</h2>
         <button className="btn btn-outline btn-sm" onClick={load}>
@@ -197,6 +227,71 @@ export default function Dashboard() {
           </div>
         </div>
       </div>
+
+      {showIncidentSection && (
+        <>
+          <div className="page-header" style={{ marginTop: 32 }}>
+            <h2>Incidents Overview</h2>
+          </div>
+
+          <div className="stats-grid">
+            {['Open', 'In Progress', 'Pending', 'Closed'].map(status => {
+              const cfg = INCIDENT_STATUS_CONFIG[status];
+              return (
+                <div
+                  className="stat-card"
+                  key={status}
+                  style={{ cursor: 'pointer' }}
+                  onClick={() => goToIncident({ status })}
+                  title={`View ${status} incidents`}
+                  onMouseEnter={e => e.currentTarget.style.boxShadow = '0 4px 12px rgba(0,0,0,0.15)'}
+                  onMouseLeave={e => e.currentTarget.style.boxShadow = ''}
+                >
+                  <div className={`stat-icon ${cfg.color}`}>{cfg.icon}</div>
+                  <div>
+                    <div className="stat-value">{incidentByStatus[status] || 0}</div>
+                    <div className="stat-label">{status}</div>
+                  </div>
+                </div>
+              );
+            })}
+            <div
+              className="stat-card"
+              style={{ cursor: 'pointer' }}
+              onClick={() => goToIncident({ priority: 'High' })}
+              title="View High priority incidents"
+              onMouseEnter={e => e.currentTarget.style.boxShadow = '0 4px 12px rgba(0,0,0,0.15)'}
+              onMouseLeave={e => e.currentTarget.style.boxShadow = ''}
+            >
+              <div className="stat-icon red"><AlertTriangle size={24} /></div>
+              <div>
+                <div className="stat-value">{data.openHighPriority || 0}</div>
+                <div className="stat-label">High Priority Open</div>
+              </div>
+            </div>
+          </div>
+
+          <div className="dashboard-grid">
+            <div className="card">
+              <div className="card-header"><h3>Incidents by Type</h3></div>
+              <div className="card-body">
+                <div className="chart-bars">
+                  {data.incidentsByType?.length > 0 ? data.incidentsByType.map((t, i) => (
+                    <ClickableBar
+                      key={t.type}
+                      label={t.type}
+                      count={parseInt(t.count)}
+                      max={maxByIncidentType}
+                      color={CHART_COLORS[i % CHART_COLORS.length]}
+                      onClick={() => goToIncident({ type: t.type })}
+                    />
+                  )) : <p className="text-muted text-center">No incidents yet</p>}
+                </div>
+              </div>
+            </div>
+          </div>
+        </>
+      )}
     </>
   );
 }
