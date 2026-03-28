@@ -66,7 +66,7 @@ export default function ImportExport() {
             <div className="card-header"><h3><Upload size={16} style={{ marginRight: 8 }} />CSV Import</h3></div>
             <div className="card-body">
               <p className="text-sm text-muted mb-4">
-                Upload a CSV file with columns: serial_number, asset_type, make, model, location, assigned_to, status, warranty_date, commentary
+                Upload a CSV file with columns: device_name, serial_number, asset_type, make, model, location, client, assigned_to, status, warranty_date, incident_number, commentary
               </p>
               <div className="form-group">
                 <input type="file" accept=".csv" ref={fileRef} className="form-control" />
@@ -96,9 +96,9 @@ export default function ImportExport() {
               <div style={{ marginTop: 20, padding: 16, background: 'var(--gray-50)', borderRadius: 'var(--radius)' }}>
                 <strong className="text-sm">CSV Template:</strong>
                 <pre className="text-sm" style={{ marginTop: 8, overflow: 'auto' }}>
-{`serial_number,asset_type,make,model,location,assigned_to,status,warranty_date,commentary
-SN-001,Laptop,Dell,Latitude 5520,Office A,John Doe,Assigned,2025-12-31,Company laptop
-SN-002,Server,HP,ProLiant DL380,Data Center,,Available,2026-06-15,Production server`}
+{`device_name,serial_number,asset_type,make,model,location,client,assigned_to,status,warranty_date,incident_number,commentary
+John's Laptop,SN-001,Laptop,Dell,Latitude 5520,Office A,Acme Corp,John Doe,Assigned,2025-12-31,,Company laptop
+,SN-002,Server,HP,ProLiant DL380,Data Center,,,Available,2026-06-15,INC-001,Production server`}
                 </pre>
               </div>
             </div>
