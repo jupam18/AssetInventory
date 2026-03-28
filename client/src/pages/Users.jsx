@@ -4,14 +4,14 @@ import Modal from '../components/Modal';
 import { formatDate } from '../utils/helpers';
 import { Plus, Edit2, UserCheck, UserX } from 'lucide-react';
 
-const ROLES = ['admin', 'technician', 'auditor'];
+const ROLES = ['admin', 'asset_manager', 'incident_manager', 'full_operator', 'full_viewer', 'provider'];
 
 export default function Users() {
   const [users, setUsers] = useState([]);
   const [loading, setLoading] = useState(true);
   const [showModal, setShowModal] = useState(false);
   const [editMode, setEditMode] = useState(false);
-  const [form, setForm] = useState({ username: '', email: '', password: '', full_name: '', role: 'technician' });
+  const [form, setForm] = useState({ username: '', email: '', password: '', full_name: '', role: 'asset_manager' });
   const [error, setError] = useState('');
   const [saving, setSaving] = useState(false);
 
@@ -30,7 +30,7 @@ export default function Users() {
   useEffect(() => { fetchUsers(); }, []);
 
   const openCreate = () => {
-    setForm({ username: '', email: '', password: '', full_name: '', role: 'technician' });
+    setForm({ username: '', email: '', password: '', full_name: '', role: 'asset_manager' });
     setEditMode(false);
     setError('');
     setShowModal(true);

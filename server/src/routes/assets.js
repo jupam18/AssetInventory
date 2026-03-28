@@ -17,8 +17,8 @@ router.get('/export/csv', authenticate, importExportController.exportCSV);
 router.get('/export/excel', authenticate, importExportController.exportExcel);
 router.get('/export/audit', authenticate, importExportController.exportAuditCSV);
 
-// Import (admin and technician only)
-router.post('/import/csv', authenticate, authorize(ROLES.ADMIN, ROLES.TECHNICIAN), upload.single('file'), importExportController.importCSV);
+// Import (admin, asset_manager, full_operator)
+router.post('/import/csv', authenticate, authorize(ROLES.ADMIN, ROLES.ASSET_MANAGER, ROLES.FULL_OPERATOR), upload.single('file'), importExportController.importCSV);
 
 // Audit log
 router.get('/audit', authenticate, auditController.list);
@@ -27,8 +27,8 @@ router.get('/audit/:assetId', authenticate, auditController.getByAsset);
 // CRUD
 router.get('/', authenticate, assetController.list);
 router.get('/:id', authenticate, assetController.getById);
-router.post('/', authenticate, authorize(ROLES.ADMIN, ROLES.TECHNICIAN), assetController.create);
-router.put('/:id', authenticate, authorize(ROLES.ADMIN, ROLES.TECHNICIAN), assetController.update);
+router.post('/', authenticate, authorize(ROLES.ADMIN, ROLES.ASSET_MANAGER, ROLES.FULL_OPERATOR), assetController.create);
+router.put('/:id', authenticate, authorize(ROLES.ADMIN, ROLES.ASSET_MANAGER, ROLES.FULL_OPERATOR), assetController.update);
 router.delete('/:id', authenticate, authorize(ROLES.ADMIN), assetController.delete);
 
 module.exports = router;

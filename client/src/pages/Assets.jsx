@@ -30,7 +30,7 @@ function useSettings() {
 
 export default function Assets() {
   const { hasRole } = useAuth();
-  const canEdit = hasRole('admin', 'technician');
+  const canEdit = hasRole('admin', 'asset_manager', 'full_operator');
   const canDelete = hasRole('admin');
   const settings = useSettings();
   const [searchParams] = useSearchParams();

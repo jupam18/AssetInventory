@@ -19,9 +19,16 @@ const STATUS_TRANSITIONS = {
 
 const ROLES = {
   ADMIN: 'admin',
-  TECHNICIAN: 'technician',
-  AUDITOR: 'auditor',
+  ASSET_MANAGER: 'asset_manager',
+  INCIDENT_MANAGER: 'incident_manager',
+  FULL_OPERATOR: 'full_operator',
+  FULL_VIEWER: 'full_viewer',
+  PROVIDER: 'provider',
 };
+
+const INCIDENT_STATUSES = ['Open', 'In Progress', 'Pending', 'Closed'];
+const INCIDENT_TYPES = ['Onboarding', 'Offboarding', 'Other'];
+const INCIDENT_PRIORITIES = ['Low', 'Medium', 'High'];
 
 const WARRANTY_ALERT_DAYS = 30;
 
@@ -30,5 +37,8 @@ module.exports = {
   ASSET_STATUSES,
   STATUS_TRANSITIONS,
   ROLES,
+  INCIDENT_STATUSES,
+  INCIDENT_TYPES,
+  INCIDENT_PRIORITIES,
   WARRANTY_ALERT_DAYS,
 };
