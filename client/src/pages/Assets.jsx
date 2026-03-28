@@ -196,14 +196,15 @@ export default function Assets() {
                 <th>Assigned To</th>
                 <th onClick={() => handleSort('status')}>Status{sortIndicator('status')}</th>
                 <th onClick={() => handleSort('warranty_date')}>Warranty{sortIndicator('warranty_date')}</th>
+                <th>Incident #</th>
                 <th>Actions</th>
               </tr>
             </thead>
             <tbody>
               {loading ? (
-                <tr><td colSpan={11} className="text-center text-muted">Loading...</td></tr>
+                <tr><td colSpan={12} className="text-center text-muted">Loading...</td></tr>
               ) : assets.length === 0 ? (
-                <tr><td colSpan={11} className="text-center text-muted">No assets found</td></tr>
+                <tr><td colSpan={12} className="text-center text-muted">No assets found</td></tr>
               ) : assets.map(a => (
                 <tr key={a.id}>
                   <td><strong>{a.device_name || '—'}</strong></td>
@@ -216,6 +217,7 @@ export default function Assets() {
                   <td>{a.assigned_to || '—'}</td>
                   <td><span className={`badge ${statusBadge(a.status)}`}>{a.status}</span></td>
                   <td>{formatDate(a.warranty_date)}</td>
+                  <td>{a.incident_number || '—'}</td>
                   <td>
                     <div className="btn-group">
                       <button className="btn-icon" onClick={() => openDetail(a)} title="View"><Eye size={16} /></button>
