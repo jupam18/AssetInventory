@@ -30,6 +30,7 @@ function useSettings() {
 
 export default function Assets() {
   const { hasRole } = useAuth();
+  const navigate = useNavigate();
   const canEdit = hasRole('admin', 'asset_manager', 'full_operator');
   const canDelete = hasRole('admin');
   const settings = useSettings();
@@ -60,6 +61,8 @@ export default function Assets() {
   const [saving, setSaving] = useState(false);
   const [editAuditLogs, setEditAuditLogs] = useState([]);
   const [loadingEditAudit, setLoadingEditAudit] = useState(false);
+  const [editIncidents, setEditIncidents] = useState([]);
+  const [loadingEditIncidents, setLoadingEditIncidents] = useState(false);
 
   const fetchAssets = useCallback(async () => {
     setLoading(true);
@@ -97,11 +100,17 @@ export default function Assets() {
     setAuditComment('');
     setEditAuditLogs([]);
     setLoadingEditAudit(true);
+    setEditIncidents([]);
+    setLoadingEditIncidents(true);
     setShowModal(true);
     api.get(`/assets/audit/${asset.id}`)
       .then(r => setEditAuditLogs(r.data.logs || []))
       .catch(() => {})
       .finally(() => setLoadingEditAudit(false));
+    getIncidentsByAsset(asset.id)
+      .then(r => setEditIncidents(r.data || []))
+      .catch(() => {})
+      .finally(() => setLoadingEditIncidents(false));
   };
 
   const openDetail = (asset) => {
@@ -346,6 +355,35 @@ export default function Assets() {
               <label>Audit Comment (reason for changes)</label>
               <input className="form-control" value={auditComment} onChange={e => setAuditComment(e.target.value)} placeholder="Optional: describe why this change was made" />
             </div>
+          )}
+          {editMode && (
+            <>
+              <h4 style={{ marginTop: 20, marginBottom: 10 }}>Related Incidents</h4>
+              {loadingEditIncidents ? <p className="text-muted">Loading...</p> : editIncidents.length === 0 ? (
+                <p className="text-muted">No incidents linked</p>
+              ) : (
+                <div className="table-container" style={{ marginBottom: 8 }}>
+                  <table>
+                    <thead><tr><th>Incident #</th><th>Title</th><th>Status</th><th>Priority</th></tr></thead>
+                    <tbody>
+                      {editIncidents.map(inc => (
+                        <tr
+                          key={inc.id}
+                          style={{ cursor: 'pointer' }}
+                          onClick={() => { setShowModal(false); navigate(`/incidents?search=${encodeURIComponent(inc.incident_number)}`); }}
+                          title="View incident"
+                        >
+                          <td><strong>{inc.incident_number}</strong></td>
+                          <td>{inc.title}</td>
+                          <td><span className={`badge ${incidentStatusBadge(inc.status)}`}>{inc.status}</span></td>
+                          <td><span className={`badge ${priorityBadge(inc.priority)}`}>{inc.priority}</span></td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              )}
+            </>
           )}
           {editMode && (
             <>
