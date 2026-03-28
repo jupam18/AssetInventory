@@ -1,9 +1,9 @@
 import { useState, useEffect, useCallback } from 'react';
-import { useSearchParams } from 'react-router-dom';
-import api from '../services/api';
+import { useSearchParams, useNavigate } from 'react-router-dom';
+import api, { getIncidentsByAsset } from '../services/api';
 import { useAuth } from '../context/AuthContext';
 import Modal from '../components/Modal';
-import { statusBadge, formatDate, ASSET_STATUSES } from '../utils/helpers';
+import { statusBadge, formatDate, incidentStatusBadge, priorityBadge, ASSET_STATUSES } from '../utils/helpers';
 import { Plus, Edit2, Trash2, Eye, ChevronLeft, ChevronRight } from 'lucide-react';
 
 const emptyAsset = {
@@ -351,12 +351,17 @@ export default function Assets() {
 }
 
 function AssetDetail({ asset }) {
+  const navigate = useNavigate();
   const [logs, setLogs] = useState([]);
   const [loadingLogs, setLoadingLogs] = useState(true);
+  const [incidents, setIncidents] = useState([]);
+  const [loadingIncidents, setLoadingIncidents] = useState(true);
 
   useEffect(() => {
     api.get(`/assets/audit/${asset.id}`).then(r => { setLogs(r.data.logs); setLoadingLogs(false); })
       .catch(() => setLoadingLogs(false));
+    getIncidentsByAsset(asset.id).then(r => { setIncidents(r.data); setLoadingIncidents(false); })
+      .catch(() => setLoadingIncidents(false));
   }, [asset.id]);
 
   return (
@@ -387,6 +392,32 @@ function AssetDetail({ asset }) {
       </div>
       {asset.commentary && (
         <div className="form-group"><label>Commentary</label><p>{asset.commentary}</p></div>
+      )}
+
+      <h4 style={{ marginTop: 20, marginBottom: 10 }}>Related Incidents</h4>
+      {loadingIncidents ? <p className="text-muted">Loading...</p> : incidents.length === 0 ? (
+        <p className="text-muted">No incidents linked</p>
+      ) : (
+        <div className="table-container" style={{ marginBottom: 8 }}>
+          <table>
+            <thead><tr><th>Incident #</th><th>Title</th><th>Status</th><th>Priority</th></tr></thead>
+            <tbody>
+              {incidents.map(inc => (
+                <tr
+                  key={inc.id}
+                  style={{ cursor: 'pointer' }}
+                  onClick={() => navigate(`/incidents?search=${encodeURIComponent(inc.incident_number)}`)}
+                  title="View incident"
+                >
+                  <td><strong>{inc.incident_number}</strong></td>
+                  <td>{inc.title}</td>
+                  <td><span className={`badge ${incidentStatusBadge(inc.status)}`}>{inc.status}</span></td>
+                  <td><span className={`badge ${priorityBadge(inc.priority)}`}>{inc.priority}</span></td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
       )}
 
       <h4 style={{ marginTop: 20, marginBottom: 10 }}>Audit History</h4>

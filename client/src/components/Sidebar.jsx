@@ -1,6 +1,6 @@
 import { NavLink } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
-import { LayoutDashboard, Monitor, ClipboardList, FileText, Users, Settings, LogOut } from 'lucide-react';
+import { LayoutDashboard, Monitor, ClipboardList, FileText, AlertCircle, Users, Settings, LogOut } from 'lucide-react';
 
 export default function Sidebar({ open, onClose }) {
   const { user, logout, hasRole } = useAuth();
@@ -23,6 +23,9 @@ export default function Sidebar({ open, onClose }) {
           </NavLink>
           <NavLink to="/assets" onClick={handleNavClick}>
             <Monitor size={18} /> Assets
+          </NavLink>
+          <NavLink to="/incidents" onClick={handleNavClick}>
+            <AlertCircle size={18} /> Incidents
           </NavLink>
           <NavLink to="/audit" onClick={handleNavClick}>
             <ClipboardList size={18} /> Audit Log

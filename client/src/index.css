@@ -476,6 +476,96 @@ textarea.form-control { min-height: 80px; resize: vertical; }
 .warranty-days.urgent { color: var(--danger); }
 .warranty-days.warning { color: var(--warning); }
 
+/* Incident badges */
+.badge-priority-low        { background: var(--gray-200);    color: var(--gray-600); }
+.badge-priority-medium     { background: var(--warning-light); color: var(--warning); }
+.badge-priority-high       { background: var(--danger-light);  color: var(--danger); }
+
+.badge-incident-open       { background: var(--primary-light); color: var(--primary); }
+.badge-incident-inprogress { background: #fed7aa; color: #9a3412; }
+.badge-incident-pending    { background: var(--warning-light); color: var(--warning); }
+.badge-incident-closed     { background: var(--success-light); color: var(--success); }
+
+.badge-incident-onboarding { background: #ede9fe; color: #5b21b6; }
+.badge-incident-offboarding { background: var(--danger-light); color: var(--danger); }
+.badge-incident-other      { background: var(--gray-200);    color: var(--gray-600); }
+
+/* Incident body field */
+.incident-body-edit {
+  font-family: 'Courier New', Courier, monospace;
+  font-size: 13px;
+  white-space: pre-wrap;
+  min-height: 120px;
+  resize: vertical;
+}
+
+.incident-body-view {
+  font-family: 'Courier New', Courier, monospace;
+  font-size: 13px;
+  white-space: pre-wrap;
+  min-height: 40px;
+  padding: 8px 12px;
+  background: var(--gray-50);
+  border: 1px solid var(--gray-200);
+  border-radius: var(--radius);
+  color: var(--gray-800);
+}
+
+/* Asset selector */
+.asset-selector { display: flex; flex-direction: column; gap: 8px; position: relative; }
+
+.asset-selector-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  min-height: 28px;
+}
+
+.asset-tag {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  background: var(--primary-light);
+  color: var(--primary);
+  border-radius: 12px;
+  padding: 2px 10px;
+  font-size: 12px;
+  font-weight: 500;
+}
+
+.asset-tag-remove {
+  background: none;
+  border: none;
+  cursor: pointer;
+  color: var(--primary);
+  display: flex;
+  align-items: center;
+  padding: 0;
+}
+
+.asset-selector-dropdown {
+  position: absolute;
+  top: 100%;
+  left: 0; right: 0;
+  background: white;
+  border: 1px solid var(--gray-200);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow-md);
+  z-index: 50;
+  max-height: 200px;
+  overflow-y: auto;
+}
+
+.asset-selector-option {
+  padding: 10px 14px;
+  cursor: pointer;
+  font-size: 14px;
+  border-bottom: 1px solid var(--gray-100);
+}
+
+.asset-selector-option:last-child { border-bottom: none; }
+.asset-selector-option:hover { background: var(--gray-50); }
+
 /* Mobile header (hamburger bar) */
 .mobile-header {
   display: none;

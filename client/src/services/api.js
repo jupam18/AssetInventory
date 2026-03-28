@@ -25,3 +25,11 @@ api.interceptors.response.use(
 );
 
 export default api;
+
+// Incidents
+export const getIncidents = (params) => api.get('/incidents', { params });
+export const getIncidentById = (id) => api.get(`/incidents/${id}`);
+export const createIncident = (data) => api.post('/incidents', data);
+export const updateIncident = (id, data) => api.put(`/incidents/${id}`, data);
+export const deleteIncident = (id) => api.delete(`/incidents/${id}`);
+export const getIncidentsByAsset = (assetId) => api.get(`/incidents/by-asset/${assetId}`);
