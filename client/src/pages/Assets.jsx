@@ -58,6 +58,8 @@ export default function Assets() {
   const [auditComment, setAuditComment] = useState('');
   const [error, setError] = useState('');
   const [saving, setSaving] = useState(false);
+  const [editAuditLogs, setEditAuditLogs] = useState([]);
+  const [loadingEditAudit, setLoadingEditAudit] = useState(false);
 
   const fetchAssets = useCallback(async () => {
     setLoading(true);
@@ -93,7 +95,13 @@ export default function Assets() {
     setEditMode(true);
     setError('');
     setAuditComment('');
+    setEditAuditLogs([]);
+    setLoadingEditAudit(true);
     setShowModal(true);
+    api.get(`/assets/audit/${asset.id}`)
+      .then(r => setEditAuditLogs(r.data.logs || []))
+      .catch(() => {})
+      .finally(() => setLoadingEditAudit(false));
   };
 
   const openDetail = (asset) => {
@@ -338,6 +346,32 @@ export default function Assets() {
               <label>Audit Comment (reason for changes)</label>
               <input className="form-control" value={auditComment} onChange={e => setAuditComment(e.target.value)} placeholder="Optional: describe why this change was made" />
             </div>
+          )}
+          {editMode && (
+            <>
+              <h4 style={{ marginTop: 20, marginBottom: 10 }}>Audit History</h4>
+              {loadingEditAudit ? <p className="text-muted">Loading...</p> : editAuditLogs.length === 0 ? (
+                <p className="text-muted">No audit records</p>
+              ) : (
+                <div className="table-container">
+                  <table>
+                    <thead><tr><th>Action</th><th>Field</th><th>From</th><th>To</th><th>By</th><th>Date</th></tr></thead>
+                    <tbody>
+                      {editAuditLogs.map(l => (
+                        <tr key={l.id}>
+                          <td><span className="badge badge-assigned">{l.action}</span></td>
+                          <td>{l.field_changed || '—'}</td>
+                          <td className="text-sm">{l.old_value || '—'}</td>
+                          <td className="text-sm">{l.new_value || '—'}</td>
+                          <td>{l.performed_by}</td>
+                          <td className="text-sm">{formatDate(l.created_at)}</td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              )}
+            </>
           )}
         </Modal>
       )}
