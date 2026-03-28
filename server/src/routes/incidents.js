@@ -10,6 +10,9 @@ router.get('/', authenticate, incidentController.list);
 // Incidents linked to a specific asset — must be before /:id to avoid being caught as an id
 router.get('/by-asset/:assetId', authenticate, incidentController.getByAsset);
 
+// Audit log for a specific incident — must be before /:id
+router.get('/audit/:incidentId', authenticate, incidentController.getAudit);
+
 router.get('/:id', authenticate, incidentController.getById);
 
 // Create — admin, full_operator, incident_manager

@@ -1,4 +1,5 @@
 const incidentModel = require('../models/incidentModel');
+const auditModel = require('../models/auditModel');
 const { INCIDENT_STATUSES, INCIDENT_TYPES, INCIDENT_PRIORITIES } = require('../config/constants');
 
 const incidentController = {
@@ -72,6 +73,15 @@ const incidentController = {
         asset_ids: Array.isArray(asset_ids) ? asset_ids : [],
       });
 
+      await auditModel.create({
+        incident_id: incident.id,
+        incident_number: incident.incident_number,
+        action: 'CREATED',
+        new_value: JSON.stringify({ title, type, status: incident.status, priority: incident.priority }),
+        performed_by: req.user.full_name,
+        comment: 'Incident created',
+      });
+
       res.status(201).json(incident);
     } catch (err) {
       if (err.code === '23505') {
@@ -106,6 +116,27 @@ const incidentController = {
         return res.status(400).json({ error: `Invalid priority. Must be one of: ${INCIDENT_PRIORITIES.join(', ')}` });
       }
 
+      // Track field changes for audit
+      const auditEntries = [];
+      const trackedFields = { title, type, status, priority, description, body, notes, assigned_to };
+      for (const [key, value] of Object.entries(trackedFields)) {
+        if (value !== undefined) {
+          const oldVal = existing[key];
+          const newVal = value === '' ? null : value;
+          if (String(oldVal ?? '') !== String(newVal ?? '')) {
+            auditEntries.push({
+              incident_id: existing.id,
+              incident_number: existing.incident_number,
+              action: key === 'status' ? 'STATUS_CHANGE' : key === 'assigned_to' ? 'ASSIGNMENT_CHANGE' : 'FIELD_UPDATE',
+              field_changed: key,
+              old_value: String(oldVal ?? ''),
+              new_value: String(newVal ?? ''),
+              performed_by: req.user.full_name,
+            });
+          }
+        }
+      }
+
       const updated = await incidentModel.update(req.params.id, {
         title,
         type,
@@ -117,6 +148,10 @@ const incidentController = {
         assigned_to: assigned_to !== undefined ? (assigned_to || null) : undefined,
         asset_ids: Array.isArray(asset_ids) ? asset_ids : undefined,
       });
+
+      if (auditEntries.length > 0) {
+        await auditModel.createMany(auditEntries);
+      }
 
       res.json(updated);
     } catch (err) {
@@ -134,9 +169,33 @@ const incidentController = {
       if (result.error === 'not_closed') {
         return res.status(400).json({ error: 'Only closed incidents can be deleted' });
       }
+
+      await auditModel.create({
+        incident_id: result.incident.id,
+        incident_number: result.incident.incident_number,
+        action: 'DELETED',
+        old_value: JSON.stringify(result.incident),
+        performed_by: req.user.full_name,
+        comment: 'Incident deleted',
+      });
+
       res.json({ message: 'Incident deleted successfully' });
     } catch (err) {
       console.error('Delete incident error:', err);
+      res.status(500).json({ error: 'Internal server error' });
+    }
+  },
+
+  async getAudit(req, res) {
+    try {
+      const { page, limit } = req.query;
+      const result = await auditModel.findByIncidentId(req.params.incidentId, {
+        page: parseInt(page) || 1,
+        limit: parseInt(limit) || 50,
+      });
+      res.json(result);
+    } catch (err) {
+      console.error('Get incident audit error:', err);
       res.status(500).json({ error: 'Internal server error' });
     }
   },

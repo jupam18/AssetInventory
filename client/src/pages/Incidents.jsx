@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback } from 'react';
 import { useSearchParams, useNavigate } from 'react-router-dom';
-import api, { getIncidents, createIncident, updateIncident, deleteIncident } from '../services/api';
+import api, { getIncidents, getIncidentById, createIncident, updateIncident, deleteIncident, getIncidentAudit } from '../services/api';
 import { useAuth } from '../context/AuthContext';
 import Modal from '../components/Modal';
 import {
@@ -122,6 +122,8 @@ export default function Incidents() {
   const [form, setForm] = useState(emptyIncident);
   const [error, setError] = useState('');
   const [saving, setSaving] = useState(false);
+  const [auditLogs, setAuditLogs] = useState([]);
+  const [loadingAudit, setLoadingAudit] = useState(false);
 
   useEffect(() => {
     api.get('/auth/users').then(r => setUsers(r.data)).catch(() => {});
@@ -152,15 +154,30 @@ export default function Incidents() {
     setShowModal(true);
   };
 
-  const openEdit = (incident) => {
-    setForm({
-      ...incident,
-      assigned_to: incident.assigned_to || '',
-      asset_ids: incident.assets?.map(a => a.id) || [],
-    });
+  const openEdit = async (incident) => {
     setEditMode(true);
     setError('');
+    setAuditLogs([]);
+    setLoadingAudit(true);
     setShowModal(true);
+    try {
+      const { data } = await getIncidentById(incident.id);
+      setForm({
+        ...data,
+        assigned_to: data.assigned_to || '',
+        asset_ids: data.assets?.map(a => a.id) || [],
+      });
+    } catch {
+      setForm({
+        ...incident,
+        assigned_to: incident.assigned_to || '',
+        asset_ids: [],
+      });
+    }
+    getIncidentAudit(incident.id)
+      .then(r => setAuditLogs(r.data.logs || []))
+      .catch(() => {})
+      .finally(() => setLoadingAudit(false));
   };
 
   const handleSave = async () => {
@@ -404,6 +421,33 @@ export default function Incidents() {
               Created: {formatDateTime(form.created_at)}
               {form.closed_at && <> · Closed: {formatDateTime(form.closed_at)}</>}
             </div>
+          )}
+
+          {editMode && (
+            <>
+              <h4 style={{ marginTop: 20, marginBottom: 10 }}>Audit History</h4>
+              {loadingAudit ? <p className="text-muted">Loading...</p> : auditLogs.length === 0 ? (
+                <p className="text-muted">No audit records</p>
+              ) : (
+                <div className="table-container">
+                  <table>
+                    <thead><tr><th>Action</th><th>Field</th><th>From</th><th>To</th><th>By</th><th>Date</th></tr></thead>
+                    <tbody>
+                      {auditLogs.map(l => (
+                        <tr key={l.id}>
+                          <td><span className="badge badge-assigned">{l.action}</span></td>
+                          <td>{l.field_changed || '—'}</td>
+                          <td className="text-sm">{l.old_value || '—'}</td>
+                          <td className="text-sm">{l.new_value || '—'}</td>
+                          <td>{l.performed_by}</td>
+                          <td className="text-sm">{formatDate(l.created_at)}</td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              )}
+            </>
           )}
         </Modal>
       )}

@@ -9,7 +9,7 @@ import { Plus, Edit2, Trash2, Eye, ChevronLeft, ChevronRight } from 'lucide-reac
 const emptyAsset = {
   device_name: '', serial_number: '', asset_type: '', make: '', model: '',
   location: '', client: '', assigned_to: '', status: 'Available',
-  warranty_date: '', commentary: '',
+  warranty_date: '', commentary: '', incident_number: '',
 };
 
 function useSettings() {
@@ -322,6 +322,10 @@ export default function Assets() {
               <label>Warranty Date</label>
               <input className="form-control" type="date" value={form.warranty_date || ''} onChange={e => setForm(f => ({ ...f, warranty_date: e.target.value }))} />
             </div>
+            <div className="form-group">
+              <label>Incident Number</label>
+              <input className="form-control" value={form.incident_number || ''} onChange={e => setForm(f => ({ ...f, incident_number: e.target.value }))} placeholder="e.g. INC-001" />
+            </div>
           </div>
           <div className="form-group">
             <label>Commentary</label>
@@ -385,6 +389,9 @@ function AssetDetail({ asset }) {
       <div className="form-row">
         <div className="form-group"><label>Assigned To</label><p>{asset.assigned_to || '—'}</p></div>
         <div className="form-group"><label>Warranty Date</label><p>{formatDate(asset.warranty_date)}</p></div>
+      </div>
+      <div className="form-row">
+        <div className="form-group"><label>Incident Number</label><p>{asset.incident_number || '—'}</p></div>
       </div>
       <div className="form-row">
         <div className="form-group"><label>Created</label><p>{formatDate(asset.created_at)}</p></div>

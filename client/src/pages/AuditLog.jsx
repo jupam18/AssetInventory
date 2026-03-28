@@ -66,7 +66,7 @@ export default function AuditLog() {
             <thead>
               <tr>
                 <th>Timestamp</th>
-                <th>Serial Number</th>
+                <th>Reference</th>
                 <th>Action</th>
                 <th>Field</th>
                 <th>Old Value</th>
@@ -83,7 +83,7 @@ export default function AuditLog() {
               ) : logs.map(l => (
                 <tr key={l.id}>
                   <td className="text-sm">{formatDateTime(l.created_at)}</td>
-                  <td><strong>{l.serial_number}</strong></td>
+                  <td><strong>{l.incident_number || l.serial_number}</strong></td>
                   <td><span className={`badge ${ACTION_COLORS[l.action] || ''}`}>{l.action}</span></td>
                   <td>{l.field_changed || '—'}</td>
                   <td className="text-sm" style={{ maxWidth: 150, overflow: 'hidden', textOverflow: 'ellipsis' }}>{l.old_value || '—'}</td>
