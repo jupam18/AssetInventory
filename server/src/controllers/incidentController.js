@@ -44,10 +44,10 @@ const incidentController = {
 
   async create(req, res) {
     try {
-      const { incident_number, title, type, status, priority, description, body, notes, assigned_to, asset_ids } = req.body;
+      const { title, type, status, priority, description, body, notes, assigned_to, asset_ids } = req.body;
 
-      if (!incident_number || !title || !type) {
-        return res.status(400).json({ error: 'incident_number, title, and type are required' });
+      if (!title || !type) {
+        return res.status(400).json({ error: 'title and type are required' });
       }
       if (!INCIDENT_TYPES.includes(type)) {
         return res.status(400).json({ error: `Invalid type. Must be one of: ${INCIDENT_TYPES.join(', ')}` });
@@ -60,7 +60,6 @@ const incidentController = {
       }
 
       const incident = await incidentModel.create({
-        incident_number,
         title,
         type,
         status,
