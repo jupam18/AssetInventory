@@ -13,7 +13,7 @@ import { Plus, ChevronLeft, ChevronRight, X } from 'lucide-react';
 const BODY_PLACEHOLDER = `Nombre: \nDirección: \nTeléfono: \nSe envía:`;
 
 const emptyIncident = {
-  incident_number: '', title: '', type: 'Onboarding', priority: 'Medium',
+  title: '', type: 'Onboarding', priority: 'Medium',
   status: 'Open', assigned_to: '', description: '', body: '', notes: '',
   asset_ids: [],
 };
@@ -300,16 +300,12 @@ export default function Incidents() {
           {error && <div className="alert alert-danger">{error}</div>}
 
           <div className="form-row">
-            <div className="form-group">
-              <label>Incident # *</label>
-              <input
-                className="form-control"
-                value={form.incident_number}
-                onChange={e => setForm(f => ({ ...f, incident_number: e.target.value }))}
-                disabled={ro('incident_number') || (editMode && !canEditFull)}
-                required
-              />
-            </div>
+            {editMode && (
+              <div className="form-group">
+                <label>Incident #</label>
+                <input className="form-control" value={form.incident_number} disabled />
+              </div>
+            )}
             <div className="form-group">
               <label>Title *</label>
               <input

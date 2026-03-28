@@ -6,10 +6,11 @@ const { ROLES } = require('../config/constants');
 
 // List & detail — all authenticated roles
 router.get('/', authenticate, incidentController.list);
-router.get('/:id', authenticate, incidentController.getById);
 
-// Incidents linked to a specific asset
+// Incidents linked to a specific asset — must be before /:id to avoid being caught as an id
 router.get('/by-asset/:assetId', authenticate, incidentController.getByAsset);
+
+router.get('/:id', authenticate, incidentController.getById);
 
 // Create — admin, full_operator, incident_manager
 router.post('/', authenticate, authorize(ROLES.ADMIN, ROLES.FULL_OPERATOR, ROLES.INCIDENT_MANAGER), incidentController.create);

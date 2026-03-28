@@ -95,10 +95,20 @@ const incidentModel = {
     return incident;
   },
 
-  async create({ incident_number, title, type, status, priority, description, body, notes, assigned_to, created_by, asset_ids = [] }) {
+  async create({ title, type, status, priority, description, body, notes, assigned_to, created_by, asset_ids = [] }) {
     const client = await pool.connect();
     try {
       await client.query('BEGIN');
+
+      // Auto-generate incident_number: INC-001, INC-002, ...
+      const { rows: numRows } = await client.query(
+        `SELECT COALESCE(MAX(
+          CASE WHEN incident_number ~ '^INC-[0-9]+$'
+          THEN CAST(SUBSTRING(incident_number FROM 5) AS INTEGER)
+          ELSE 0 END
+        ), 0) + 1 AS next_num FROM incidents`
+      );
+      const incident_number = `INC-${String(numRows[0].next_num).padStart(3, '0')}`;
 
       const { rows } = await client.query(
         `INSERT INTO incidents (incident_number, title, type, status, priority, description, body, notes, assigned_to, created_by)
